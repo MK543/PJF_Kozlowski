@@ -1,10 +1,13 @@
+from ctypes.wintypes import tagSIZE
+from multiprocessing import context
 from django.urls import reverse
-from django.shortcuts import redirect, render
-from app.forms import CommentForm, SubscribeForm
+from django.shortcuts import get_object_or_404, redirect, render
+from app.forms import CommentForm, NewUserForm, SubscribeForm
 from django.http import HttpResponseRedirect
 from app.models import Comment, Post, Profile, Subscribe, Tag, WebsiteMeta
 from django.contrib.auth.models import User
 from django.db.models import Count
+from django.contrib.auth import login
 
 # Create your views here.
 def post_page(request, slug):
@@ -12,6 +15,16 @@ def post_page(request, slug):
     comments = Comment.objects.filter(post=post, parent=None)
     form = CommentForm()
     
+    
+    is_liked = False
+    if post.likes.filter(id = request.user.id).exists():
+        is_liked = True
+    likes = post.likes.all().count()
+    
+    is_bookmarked = False
+    if post.bookmarks.filter(id = request.user.id).exists():
+        is_bookmarked = True
+        
     if request.POST:
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid:
@@ -34,9 +47,24 @@ def post_page(request, slug):
         post.view_count = 1
     else:
         post.view_count += 1
-        
+    
+    recent_posts = Post.objects.exclude(id = post.id).order_by("-last_updated")[0:3]
+    top_authors = User.objects.annotate(number = Count('post')).filter(profile__isnull=False).order_by('-number')[0:3]
+    tags = Tag.objects.all()
+    related_posts = Post.objects.exclude(id = post.id).filter(author = post.author)[0:3]
+    
     post.save()
-    context = {'post': post, 'form': form, 'comments': comments}
+    context = {'post': post,
+               'form': form,
+               'comments': comments,
+               "is_bookmarked": is_bookmarked,
+               "is_liked": is_liked,
+               "likes": likes,
+               "recent_posts": recent_posts,
+               "top_authors": top_authors,
+               "tags": tags,
+               "related_posts": related_posts
+               }
     return render(request, "app/post.html", context)
 
 def index(request):
@@ -69,7 +97,7 @@ def index(request):
                 "subscribe_form": subscribe_form,
                 "subscribe_succesful": subscribe_succesful,
                 "featured_blog": featured_blog,
-                "website_info": website_info
+                "website_info": website_info,
                 }
     return render(request, "app/index.html", context)
 
@@ -123,3 +151,53 @@ def about(request):
         
     context = {'website_info': website_info}
     return render(request, "app/about.html", context)
+
+
+def register_user(request):
+    form = NewUserForm()
+    if request.method == "POST":
+        form = NewUserForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("/")
+
+    context = {'form': form}
+    return render(request, "app/register.html", context)
+
+def bookmark_post(request, slug):
+    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    if post.bookmarks.filter(id = request.user.id).exists():
+        post.bookmarks.remove(request.user)
+    else:
+        post.bookmarks.add(request.user)
+    return redirect(reverse('post_page', args=[str(slug)]))
+
+def like_post(request, slug):
+    post = get_object_or_404(Post, id=request.POST.get('post_id'))
+    if post.likes.filter(id = request.user.id).exists():
+        post.likes.remove(request.user)
+    else:
+        post.likes.add(request.user)
+    return redirect(reverse('post_page', args=[str(slug)]))
+
+def all_bookmarked_posts(request):
+    if request.user.is_authenticated:
+        all_bookmarked_posts = Post.objects.filter(bookmarks = request.user)
+        context = {'all_bookmarked_posts': all_bookmarked_posts}
+        return render(request, "app/all_bookmarked_posts.html", context)
+    else:
+        return redirect("/")
+
+def all_posts(request):
+    all_posts = Post.objects.all()
+    context = {'all_posts': all_posts}
+    return render(request, "app/all_posts.html", context)
+
+def all_liked_posts(request):
+    if request.user.is_authenticated:
+        all_liked_posts = Post.objects.filter(likes = request.user)
+        context = {'all_liked_posts': all_liked_posts}
+        return render(request, "app/all_liked_posts.html", context)
+    else:
+        return redirect("/")
