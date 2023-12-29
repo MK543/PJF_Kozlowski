@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Blog | About {% endblock title %}
+{% block content %}   
+<div class="container">
+    <div class="page-top">
+        <div class="top flex">
+            <div class="page-name">
+                <a href="https://murmuring-tundra-27912.herokuapp.com/" class="learn">
+                    <span class="material-icons"> keyboard_return </span> Go back
+                </a>
+                <h1>About</h1>
+            </div>
+        </div>
+    </div>
+</div>
+    <section class="sp">
+        <div class="container">
+            {% if website_info.about %}
+            <p>{{website_info.about}}</p>
+            {% else %}
+            <p>Turpis tincidunt id aliquet risus feugiat in ante metus dictum.
+                Sed tempus urna et pharetra pharetra massa massa ultricies.
+                Ornare lectus sit amet est placerat.
+                Non curabitur gravida arcu ac tortor dignissim convallis aenean et.
+                Dictumst vestibulum rhoncus est pellentesque elit ullamcorper dignissim cras tincidunt.
+                Diam sit amet nisl suscipit adipiscing bibendum. Eget felis eget nunc lobortis mattis.
+                Fames ac turpis egestas integer eget aliquet.
+                Volutpat commodo sed egestas egestas fringilla phasellus faucibus scelerisque.
+                Ornare quam viverra orci sagittis eu.
+            </p>
+            {% endif %}
+        </div>
+    </section>
+{% endblock content %} 
