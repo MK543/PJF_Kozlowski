@@ -13,6 +13,7 @@ from django.contrib.auth import login
 def post_page(request, slug):
     post = Post.objects.get(slug=slug)
     comments = Comment.objects.filter(post=post, parent=None)
+    comments_count = Comment.objects.filter(post=post).count()
     form = CommentForm()
     
     
@@ -63,7 +64,8 @@ def post_page(request, slug):
                "recent_posts": recent_posts,
                "top_authors": top_authors,
                "tags": tags,
-               "related_posts": related_posts
+               "related_posts": related_posts,
+               "comments_count": comments_count
                }
     return render(request, "app/post.html", context)
 

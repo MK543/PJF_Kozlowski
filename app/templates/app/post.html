@@ -9,7 +9,7 @@
                 <div class="page-top">
                     <div class="top flex">
                     <div class="page-name">
-                    <a href="#" class="learn">
+                    <a href="{% url "index" %}" class="learn">
                     <span class="material-icons"> keyboard_return </span> Go back </a>
                     <h1>Blog</h1>
                     </div>
@@ -100,7 +100,7 @@
                         </div>
                         <div class="total-comments">
                           <i class="uil uil-comment-alt"></i>
-                          <span>10</span>
+                          <span>{{comments_count}}</span>
                         </div>
                       </div>
                       <div class="share">
